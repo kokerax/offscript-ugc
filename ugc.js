@@ -1,0 +1,8 @@
+(()=>{
+ const videos=[...document.querySelectorAll('video[data-loop]')],toggle=document.querySelector('#video-toggle'),reduced=matchMedia('(prefers-reduced-motion: reduce)');let userPaused=false,userOptIn=false;const visible=new Set();
+ function sync(){const paused=userPaused||(reduced.matches&&!userOptIn),stopped=paused||document.hidden||document.querySelector('#story').open;videos.forEach(v=>{if(!stopped&&visible.has(v)&&v.closest('.reel-panel')?.dataset.covered!=='true'){const source=v.querySelector('source[data-src]');if(source){source.src=source.dataset.src;source.removeAttribute('data-src');v.load()}v.play().catch(()=>{})}else v.pause()});toggle.textContent=paused?'Videoları oynat ▶':'Videoları duraklat Ⅱ';toggle.setAttribute('aria-pressed',String(paused));}
+ const observer=new IntersectionObserver(entries=>{entries.forEach(e=>e.isIntersecting?visible.add(e.target):visible.delete(e.target));sync()},{threshold:.1});videos.forEach(v=>{v.muted=true;observer.observe(v)});
+ toggle.addEventListener('click',()=>{const paused=userPaused||(reduced.matches&&!userOptIn);userPaused=!paused;if(paused)userOptIn=true;sync()});reduced.addEventListener('change',()=>{userOptIn=false;sync()});document.addEventListener('visibilitychange',sync);
+ const dialog=document.querySelector('#story'),player=dialog.querySelector('video');document.querySelectorAll('.work').forEach(w=>w.addEventListener('click',()=>{player.src=w.dataset.video;player.poster=w.dataset.poster;player.hidden=false;videos.forEach(v=>v.pause());player.play().catch(()=>{})}));dialog.addEventListener('close',()=>{player.pause();player.removeAttribute('src');player.load();sync()});
+ document.addEventListener('scenechange',sync);sync();
+})();
